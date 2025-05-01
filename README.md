@@ -3,7 +3,7 @@ Vibe coded something i was missing for myself. Reference a past convo in current
 
 https://cdn.jsdelivr.net/gh/basfenix/tm_convoref/convo-reference.js
 
-•  **Quick Chat Reference ** Adds a  button to TypingMind's interface that lets you access your past conversations without leaving the current chat
+•  **Quick Chat Reference** Adds a  button to TypingMind's interface that lets you access your past conversations without leaving the current chat
 
 •  **Searchable History**  Provides a modal window with a search function to easily find specific past conversations from your local browser storage
 
