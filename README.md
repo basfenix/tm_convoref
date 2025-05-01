@@ -1,4 +1,4 @@
-# tm_convoref
+# Typing Mind Conversation Reference Extension
 Vibe coded something i was missing for myself. Reference a past convo in current context window.
 
 https://cdn.jsdelivr.net/gh/basfenix/tm_convoref/convo-reference.js
