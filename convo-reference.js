@@ -2,15 +2,7 @@
 // Version: 1.0.0
 // Description: Adds a button to reference previous conversations in TypingMind
 // Author: Original by basfenix
-// License: MIT
 // Usage: Add this script URL to TypingMind's custom extensions
-// 
-// IMPORTANT: When using as a GitHub Gist, use the jsDelivr URL format below instead of the raw GitHub URL:
-// https://cdn.jsdelivr.net/gh/username/gist:gistid/filename.js
-// Example:
-// https://cdn.jsdelivr.net/gh/basfenix/gist:832e56909534edb2422525fcf387e5ac/tm_convoref.js
-//
-// Or use Cloudflare Workers to host this script with proper CORS headers
 
 (() => {
   // ----------------------------------------
