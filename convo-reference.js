@@ -1,9 +1,25 @@
 // TypingMind Conversation Reference Extension
-// Version: 1.0.0
-// Description: Adds a button to reference previous conversations in TypingMind
+// Version: 1.1.0
+// Description: Adds a button to reference previous conversations in TypingMind.
+//              v1.1.0: Only injects on chat pages, removes floating button, fixes plugin page bug.
 // Author: Original by basfenix
+// License: MIT
+// Last updated: 2025-05-16
 // Usage: Add this script URL to TypingMind's custom extensions
-
+// CDN: https://cdn.jsdelivr.net/gh/basfenix/tm_convoref/convo-reference.js
+//
+// Changelog:
+// v1.1.0 (2024-06-07)
+//   - Only injects on chat pages (fixes plugin page bug)
+//   - Removes floating/backup button
+//   - Code cleanup and documentation
+//   - Thanks to JourinT for reporting these issues!
+//
+// Thanks to JourinT for reporting bugs and feedback!
+//
+// ----------------------------------------
+// (Code starts below)
+// ----------------------------------------
 (() => {
   // ----------------------------------------
   // Configuration
@@ -84,54 +100,61 @@
   // ----------------------------------------
   // Button & UI Management
   // ----------------------------------------
+  /**
+   * Finds the chat input action bar by its unique data-element-id.
+   * @returns {HTMLElement|null} The chat input action bar element, or null if not found.
+   */
   function findChatActionBar() {
-    // Try multiple selectors for the action bar
-    return document.querySelector('[data-element-id="chat-input-actions"]') || 
-           document.querySelector('.chat-input-actions') || 
-           document.querySelector('.flex.items-center.justify-between');
+    return document.querySelector('[data-element-id="chat-input-actions"]');
   }
 
+  /**
+   * Adds the reference button to the chat input action bar if present.
+   * Ensures the button is only injected on chat pages and not elsewhere.
+   * Removes the button if the action bar is not present.
+   * @returns {boolean} True if the button was added, false otherwise.
+   */
   function addReferenceButton() {
     try {
-      // Clear existing button to avoid duplicates
+      // Remove existing button to avoid duplicates
       const existingButton = document.getElementById('tm-reference-chat-button-container');
       if (existingButton) {
         log("Removing existing button");
         existingButton.remove();
       }
-      
+
       const actionBar = findChatActionBar();
       if (!actionBar) {
-        log("Could not find chat input actions bar, retrying later...");
-        return false;
-      }
-      
-      // Find the left side of the action bar
-      const leftSide = actionBar.querySelector('.flex.items-center.justify-start');
-      if (!leftSide) {
-        log("Could not find left side of action bar, using fallback...");
-        addFloatingButton();
+        log("Chat input actions bar not found. Button will not be injected.");
+        // If the button exists but the action bar is gone, remove the button
         return false;
       }
 
-      log("Found action bar, injecting button");
-      
+      // Find the left side of the action bar
+      const leftSide = actionBar.querySelector('.flex.items-center.justify-start');
+      if (!leftSide) {
+        log("Could not find left side of action bar. Button will not be injected.");
+        return false;
+      }
+
+      log("Found chat input action bar, injecting button");
+
       // Create button container
       const refButtonContainer = document.createElement('div');
       refButtonContainer.id = 'tm-reference-chat-button-container';
       refButtonContainer.innerHTML = '<button id="reference-chat-button" class="focus-visible:outline-blue-600 w-9 h-9 rounded-lg justify-center items-center gap-1.5 inline-flex text-slate-900 hover:bg-slate-900/20 active:bg-slate-900/25 disabled:text-neutral-400 dark:text-white dark:hover:bg-white/20 dark:active:bg-white/25 dark:disabled:text-neutral-500" data-tooltip-content="' + CONFIG.buttonTooltip + '" data-tooltip-id="global"><svg class="w-5 h-5" width="18px" height="18px" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><path d="M15,2H3C2.4,2,2,2.4,2,3v10c0,0.6,0.4,1,1,1h2v2.5c0,0.3,0.3,0.5,0.6,0.4l4.6-2.9H15c0.6,0,1-0.4,1-1V3C16,2.4,15.6,2,15,2z" fill="none" stroke="currentColor" stroke-width="1.5"></path><path d="M5.5,6.5h7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"></path><path d="M5.5,9.5h4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"></path></g></svg></button>';
-      
+
       // Insert button in the left side
       leftSide.prepend(refButtonContainer);
       log("Button added");
-      
+
       // Add click handler
       refButtonContainer.addEventListener('click', (event) => {
         if (event.target.closest('#reference-chat-button')) {
           handleButtonClick();
         }
       });
-      
+
       buttonAdded = true;
       return true;
     } catch (error) {
@@ -140,18 +163,16 @@
     }
   }
 
-  function addFloatingButton() {
-    log("Adding floating button as fallback");
-    const existingFloatingButton = document.getElementById('tm-reference-chat-floating-button');
-    if (existingFloatingButton) return;
-    
-    const floatingButton = document.createElement('button');
-    floatingButton.id = 'tm-reference-chat-floating-button';
-    floatingButton.innerHTML = '💬 Ref';
-    floatingButton.style.cssText = 'position: fixed; bottom: 20px; right: 20px; z-index: 9999; padding: 8px 12px; background: #3182ce; color: white; border: none; border-radius: 6px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer;';
-    document.body.appendChild(floatingButton);
-    floatingButton.addEventListener('click', handleButtonClick);
-    buttonAdded = true;
+  /**
+   * Removes the reference button from the DOM if it exists.
+   */
+  function removeReferenceButton() {
+    const existingButton = document.getElementById('tm-reference-chat-button-container');
+    if (existingButton) {
+      log("Removing reference button due to chat bar disappearance or navigation.");
+      existingButton.remove();
+      buttonAdded = false;
+    }
   }
 
   // ----------------------------------------
@@ -374,14 +395,20 @@
   // ----------------------------------------
   // UI Observation & Navigation Handling
   // ----------------------------------------
+  /**
+   * Sets up a MutationObserver to monitor for the presence of the chat input action bar.
+   * Injects or removes the reference button as appropriate.
+   */
   function setupObserver() {
     if (observerActive) return;
     try {
       const observer = new MutationObserver((mutations) => {
         let shouldCheck = false;
+        let shouldRemove = false;
 
         for (const mutation of mutations) {
-          if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) continue;
+          if (mutation.type !== 'childList') continue;
+          // Check for addition of chat input bar
           for (const node of mutation.addedNodes) {
             if (node.nodeType !== 1) continue; // elements only
             if (
@@ -392,14 +419,34 @@
               break;
             }
           }
-          if (shouldCheck) break;
+          // Check for removal of chat input bar
+          for (const node of mutation.removedNodes) {
+            if (node.nodeType !== 1) continue;
+            if (
+              (node.getAttribute && node.getAttribute('data-element-id') === 'chat-input-actions') ||
+              (node.querySelector && node.querySelector('[data-element-id="chat-input-actions"]'))
+            ) {
+              shouldRemove = true;
+              break;
+            }
+          }
+          if (shouldCheck || shouldRemove) break;
         }
 
         if (shouldCheck) {
           clearTimeout(window.convoRefDebounce);
           window.convoRefDebounce = setTimeout(() => {
-            log('Chat UI changed, adding button');
+            log('Chat UI changed, checking for button injection');
             addReferenceButton();
+          }, 500);
+        }
+        if (shouldRemove) {
+          clearTimeout(window.convoRefDebounce);
+          window.convoRefDebounce = setTimeout(() => {
+            log('Chat UI changed, checking for button removal');
+            if (!findChatActionBar()) {
+              removeReferenceButton();
+            }
           }, 500);
         }
       });
@@ -413,6 +460,10 @@
     }
   }
 
+  /**
+   * Handles navigation events and ensures the button is only present on chat pages.
+   * @param {string} eventLabel - Label for the navigation event.
+   */
   function handleNavigation(eventLabel) {
     const now = Date.now();
     if (now - lastNavTime < 500) {
@@ -424,32 +475,14 @@
     log(`Navigation detected: ${eventLabel}`);
     buttonAdded = false; // Need to re-add button
 
-    // Try after a short delay
     setTimeout(() => {
-      if (addReferenceButton()) {
-        log('Button added after navigation');
-        return;
-      }
-      
-      // If not found, schedule additional attempts
-      if (checkInterval) clearInterval(checkInterval);
-      
-      attemptCount = 0;
-      checkInterval = setInterval(() => {
+      if (findChatActionBar()) {
         if (addReferenceButton()) {
-          log('Button added in delayed check');
-          clearInterval(checkInterval);
-          checkInterval = null;
-          return;
+          log('Button added after navigation');
         }
-        
-        attemptCount++;
-        if (attemptCount >= CONFIG.maxRetryAttempts) {
-          log('Max retry attempts reached - stopping');
-          clearInterval(checkInterval);
-          checkInterval = null;
-        }
-      }, CONFIG.buttonRetryDelay);
+      } else {
+        removeReferenceButton();
+      }
     }, 1500);
   }
 
