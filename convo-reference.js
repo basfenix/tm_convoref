@@ -9,14 +9,11 @@
 // CDN: https://cdn.jsdelivr.net/gh/basfenix/tm_convoref/convo-reference.js
 //
 // Changelog:
-// v1.1.0 (2024-06-07)
+// v1.1.0 (2025-05-16)
 //   - Only injects on chat pages (fixes plugin page bug)
 //   - Removes floating/backup button
 //   - Code cleanup and documentation
 //   - Thanks to JourinT for reporting these issues!
-//
-// Thanks to JourinT for reporting bugs and feedback!
-//
 // ----------------------------------------
 // (Code starts below)
 // ----------------------------------------
